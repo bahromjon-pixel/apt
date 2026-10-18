@@ -1,45 +1,126 @@
-<script src="js/site-config.js"></script>
-<script>
-  (function () {
-    function loadNews() {
-      let url = `https://raw.githubusercontent.com/${SITE_CONFIG.GH_OWNER}/${SITE_CONFIG.GH_REPO}/${SITE_CONFIG.GH_BRANCH}/${SITE_CONFIG.NEWS_PATH}`;
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="utf-8" />
+    <title>Andijon pedagogika texnikumi - Yangiliklar</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link href="./img/favicon.ico" rel="icon" />
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="./lib/animate/animate.min.css" rel="stylesheet" />
+    <link href="./lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet" />
+    <link href="./css/bootstrap.min.css" rel="stylesheet" />
+    <link href="./css/style.css" rel="stylesheet" />
+  </head>
 
-      fetch(url)
-        .then(res => res.json())
-        .then(list => {
-          let container = document.getElementById("news-list");
-          let noData = document.getElementById("news-no-data");
-          if (!container) return;
+  <body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+      <a href="index.html" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+        <h2 class="m-0 text-primary"><i class="fa fa-book me-3"></i>Andijon pedagogika texnikumi</h2>
+      </a>
+      <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+          <a href="index.html" class="nav-item nav-link">Bosh sahifa</a>
+          <a href="index.html#biz_haqimizda" class="nav-item nav-link">Biz haqimizda</a>
+          <a href="courses.html" class="nav-item nav-link">Bizning yo'nalishlar</a>
+          <a href="news.html" class="nav-item nav-link active">Yangiliklar</a>
+          <a href="index.html#idaloqa" class="nav-item nav-link">Aloqa</a>
+          <a href="admin.html" class="nav-item nav-link text-success fw-bold"><i class="fa fa-lock me-1"></i>Admin</a>
+        </div>
+      </div>
+    </nav>
+    <!-- Navbar End -->
 
-          if (!list || list.length === 0) {
-            if (noData) noData.style.display = "block";
-            container.innerHTML = "";
-            return;
-          }
-          if (noData) noData.style.display = "none";
+    <!-- Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+      <div class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-lg-10 text-center">
+            <h1 class="display-3 text-white animated slideInDown">Yangiliklar</h1>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb justify-content-center text-uppercase">
+                <li class="breadcrumb-item"><a href="index.html" class="text-white">Bosh sahifa</a></li>
+                <li class="breadcrumb-item text-white active" aria-current="page">Yangiliklar</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Header End -->
 
-          let html = "";
-          list.reverse().forEach((item, i) => {
-            let delay = 0.1 + (i % 3) * 0.2;
-            html += `<div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="${delay}s">
-                      <div class="course-item bg-light h-100">
-                        <div class="position-relative overflow-hidden">
-                          <img class="img-fluid" src="${item.image}" alt="" style="width:100%;height:200px;object-fit:cover" />
-                        </div>
-                        <div class="text-center p-4 pb-2">
-                          <h5 class="mb-3">${item.title}</h5>
-                          <p class="mb-2">${item.text}</p>
-                        </div>
-                        <div class="border-top d-flex justify-content-center py-3">
-                          <small class="text-primary"><i class="fa fa-clock me-1"></i>${item.date}</small>
-                        </div>
-                      </div>
-                    </div>`;
+    <!-- Yangiliklar Ro'yxati Start -->
+    <div class="container-xxl py-5">
+      <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+          <h6 class="section-title bg-white text-center text-primary px-3">So'nggi xabarlar</h6>
+          <h1 class="mb-5">Texnikum yangiliklari</h1>
+        </div>
+        <div id="news-list" class="row g-4 justify-content-center">
+          <p class="text-center text-muted">Yangiliklar yuklanmoqda...</p>
+        </div>
+      </div>
+    </div>
+    <!-- Yangiliklar Ro'yxati End -->
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./lib/wow/wow.min.js"></script>
+    <script src="./lib/easing/easing.min.js"></script>
+    <script src="./lib/waypoints/waypoints.min.js"></script>
+    <script src="./lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="./js/site-config.js"></script>
+    <script src="./js/main.js"></script>
+
+    <!-- GitHub dan Yangiliklarni Yuklash -->
+    <script>
+      (function () {
+        let container = document.getElementById("news-list");
+        if (!container) return;
+
+        if (typeof SITE_CONFIG === "undefined") {
+          container.innerHTML = "<p class='text-center text-muted'>site-config.js topilmadi!</p>";
+          return;
+        }
+
+        let url = `https://raw.githubusercontent.com/${SITE_CONFIG.GH_OWNER}/${SITE_CONFIG.GH_REPO}/${SITE_CONFIG.GH_BRANCH}/${SITE_CONFIG.NEWS_PATH}?t=` + Date.now();
+
+        fetch(url)
+          .then((res) => res.json())
+          .then((list) => {
+            if (!list || list.length === 0) {
+              container.innerHTML = "<p class='text-center text-muted fs-5'>Hozircha yangiliklar qo'shilmadi.</p>";
+              return;
+            }
+
+            let html = "";
+            list.slice().reverse().forEach((item, i) => {
+              let imgTag = item.image ? '<img class="img-fluid" src="' + item.image + '" alt="" style="width:100%; height:220px; object-fit:cover;" />' : '';
+              let dateStr = item.date ? '<small class="text-primary"><i class="fa fa-clock me-1"></i>' + item.date + '</small>' : '';
+              
+              html += '<div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">' +
+                      '<div class="course-item bg-light h-100 shadow-sm rounded overflow-hidden">' +
+                      '<div class="position-relative overflow-hidden">' + imgTag + '</div>' +
+                      '<div class="text-center p-4 pb-2">' +
+                      '<h5 class="mb-3">' + (item.title || '') + '</h5>' +
+                      '<p class="mb-2 text-dark">' + (item.text || '') + '</p>' +
+                      '</div>' +
+                      '<div class="border-top d-flex justify-content-center py-3 bg-white">' + dateStr + '</div>' +
+                      '</div></div>';
+            });
+            container.innerHTML = html;
+          })
+          .catch((err) => {
+            console.error(err);
+            container.innerHTML = "<p class='text-center text-muted'>Yangiliklarni yuklab bo'lmadi.</p>";
           });
-          container.innerHTML = html;
-        })
-        .catch(err => console.error("Yangiliklarni yuklashda xatolik:", err));
-    }
-    loadNews();
-  })();
-</script>
+      })();
+    </script>
+  </body>
+</html>
