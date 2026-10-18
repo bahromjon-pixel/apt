@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <title>Admin Panel - Yangiliklarni Boshqarish</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
 </head>
 <body class="bg-light">
     <div class="container py-5">
         <h2 class="mb-4 text-center text-primary">Texnikum Admin Paneli</h2>
-
+        
         <!-- Login qismi -->
-        <div id="login-box" class="card p-4 mx-auto shadow-sm" style="max-width: 400px;">
-            <h4 class="mb-3">Tizimga kirish</h4>
+        <div id="login-box" class="card p-4 mx-auto shadow-sm" style="max-width: 450px;">
+            <h4 class="mb-3 text-center">Tizimga kirish</h4>
             <div class="mb-3">
-                <label class="form-label">GitHub Token (Parol o'rniga):</label>
+                <label class="form-label">GitHub Access Token:</label>
                 <input type="password" id="admin-pass" class="form-control" placeholder="ghp_... tokenni kiriting">
-                <small class="text-muted">Hamma ko'rishi uchun GitHub Access Token talab etiladi.</small>
+                <small class="text-muted d-block mt-1">Yangiliklarni hamma ko'rishi uchun GitHub Token talab qilinadi.</small>
             </div>
             <button class="btn btn-primary w-100" onclick="checkLogin()">Kirish</button>
         </div>
@@ -27,14 +27,14 @@
             <div class="card p-4 shadow-sm mb-4">
                 <h4 id="form-title" class="mb-3">Yangi yangilik qo'shish</h4>
                 <input type="hidden" id="edit-id" value="">
-
+                
                 <div class="mb-3">
                     <label class="form-label">Yangilik sarlavhasi:</label>
                     <input type="text" id="news-title" class="form-control" placeholder="Sarlavhani kiriting...">
                 </div>
-
+                
                 <div class="mb-3">
-                    <label class="form-label">Rasm manzili (URL yoki img/foto.jpg):</label>
+                    <label class="form-label">Rasm manzili (masalan: img/course-1.jpg):</label>
                     <input type="text" id="news-img" class="form-control" value="img/course-1.jpg">
                 </div>
 
@@ -48,7 +48,7 @@
                     <button class="btn btn-secondary" id="cancel-btn" onclick="resetForm()" style="display:none;">Bekor qilish</button>
                 </div>
             </div>
-
+            
             <div class="card p-4 shadow-sm">
                 <h4>Mavjud yangiliklar ro'yxati</h4>
                 <div id="admin-news-list" class="mt-3">Yuklanmoqda...</div>
@@ -56,21 +56,24 @@
         </div>
     </div>
 
-    <script src="js/site-config.js"></script>
+    <script src="./js/site-config.js"></script>
     <script>
         let githubToken = "";
         let newsList = [];
-        let shaKey = ""; // GitHub file SHA for updates
+        let shaKey = ""; 
 
         function checkLogin() {
-            githubToken = document.getElementById("admin-pass").value;
+            githubToken = document.getElementById("admin-pass").value.trim();
             if (!githubToken) {
                 alert("Iltimos, GitHub tokenini kiriting!");
                 return;
             }
-            // Tokenni tekshirib, panelni ochamiz
-            document.getElementById("login-box").style.display = "none";
-            document.getElementById("admin-panel").style.display = "block";
+
+            if (typeof SITE_CONFIG === "undefined" || !SITE_CONFIG.GH_OWNER || !SITE_CONFIG.GH_REPO) {
+                alert("js/site-config.js faylida GH_OWNER va GH_REPO to'g'ri ko'rsatilganiga ishonch hosil qiling!");
+                return;
+            }
+
             fetchNewsFromGitHub();
         }
 
@@ -78,20 +81,43 @@
             return `https://api.github.com/repos/${SITE_CONFIG.GH_OWNER}/${SITE_CONFIG.GH_REPO}/contents/${SITE_CONFIG.NEWS_PATH}`;
         }
 
-        // GitHub'dan mavjud yangiliklarni o'qib olish
         function fetchNewsFromGitHub() {
             fetch(getApiUrl(), {
-                headers: { Authorization: `token ${githubToken}` }
+                headers: { 
+                    "Authorization": `Bearer ${githubToken}`,
+                    "Accept": "application/vnd.github.v3+json"
+                }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 401) {
+                    throw new Error("Token noto'g'ri yoki amal qilish muddati tugagan!");
+                }
+                if (res.status === 404) {
+                    throw new Error("data/news.json fayli GitHub repozitoriyida topilmadi!");
+                }
+                if (!res.ok) {
+                    throw new Error("GitHub bilan bog'lanishda xatolik yuz berdi.");
+                }
+                return res.json();
+            })
             .then(data => {
                 shaKey = data.sha;
-                let content = JSON.parse(decodeURIComponent(escape(window.atob(data.content))));
-                newsList = Array.isArray(content) ? content : [];
+                let binaryStr = atob(data.content.replace(/\s/g, ''));
+                let bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                let decodedContent = new TextDecoder('utf-8').decode(bytes);
+                
+                newsList = JSON.parse(decodedContent);
+                if (!Array.isArray(newsList)) newsList = [];
+
+                document.getElementById("login-box").style.display = "none";
+                document.getElementById("admin-panel").style.display = "block";
                 renderAdminList();
             })
             .catch(err => {
-                alert("Ma'lumotlarni olishda xatolik! Token yoki sozlamalarni tekshiring.");
+                alert(err.message);
                 console.error(err);
             });
         }
@@ -105,7 +131,7 @@
 
             newsList.forEach((item, index) => {
                 html += `<div class="border p-3 mb-2 d-flex justify-content-between align-items-center bg-white shadow-sm rounded">
-                        <div><strong>${item.title}</strong><br><small class="text-muted">${item.date}</small></div>
+                        <div><strong>${item.title}</strong><br><small class="text-muted">${item.date || ''}</small></div>
                         <div>
                         <button class="btn btn-primary btn-sm me-2" onclick="editNews(${index})">Tahrirlash</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteNews(${index})">O'chirish</button>
@@ -115,9 +141,9 @@
         }
 
         function saveNewsToGitHub() {
-            let title = document.getElementById("news-title").value;
-            let text = document.getElementById("news-text").value;
-            let img = document.getElementById("news-img").value;
+            let title = document.getElementById("news-title").value.trim();
+            let text = document.getElementById("news-text").value.trim();
+            let img = document.getElementById("news-img").value.trim();
             let editId = document.getElementById("edit-id").value;
 
             if (!title || !text) {
@@ -125,17 +151,18 @@
                 return;
             }
 
+            let dateNow = new Date();
+            let formattedDate = dateNow.toLocaleDateString('uz-UZ') + " " + dateNow.toLocaleTimeString('uz-UZ', {hour: '2-digit', minute:'2-digit'});
+
             if (editId === "") {
-                // Yangi qo'shish
                 newsList.push({
                     id: Date.now(),
                     title: title,
                     image: img || "img/course-1.jpg",
                     text: text,
-                    date: new Date().toISOString().slice(0, 16).replace('T', ' ')
+                    date: formattedDate
                 });
             } else {
-                // Tahrirlash
                 newsList[editId].title = title;
                 newsList[editId].text = text;
                 newsList[editId].image = img;
@@ -144,30 +171,36 @@
             updateGitHubFile();
         }
 
-        // GitHub dagi news.json faylini yangilash
         function updateGitHubFile() {
-            let updatedContent = btoa(unescape(encodeURIComponent(JSON.stringify(newsList, null, 2))));
+            let jsonString = JSON.stringify(newsList, null, 2);
+            let bytes = new TextEncoder().encode(jsonString);
+            let binaryStr = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binaryStr += String.fromCharCode(bytes[i]);
+            }
+            let updatedContent = btoa(binaryStr);
 
             fetch(getApiUrl(), {
                 method: "PUT",
                 headers: {
-                    Authorization: `token ${githubToken}`,
-                    "Content-Type": "application/json"
+                    "Authorization": `Bearer ${githubToken}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github.v3+json"
                 },
                 body: JSON.stringify({
-                    message: "Admin paneldan yangilik yangilandi",
+                    message: "Admin paneldan yangiliklar yangilandi",
                     content: updatedContent,
                     sha: shaKey,
-                    branch: SITE_CONFIG.GH_BRANCH
+                    branch: SITE_CONFIG.GH_BRANCH || "main"
                 })
             })
             .then(res => {
                 if (res.ok) {
-                    alert("Muvaffaqiyatli saqlandi va hammaga ko'rinadigan bo'ldi!");
+                    alert("Yangilik muvaffaqiyatli saqlandi va hammaga e'lon qilindi!");
                     resetForm();
                     fetchNewsFromGitHub();
                 } else {
-                    alert("Saqlashda xatolik yuz berdi!");
+                    alert("Saqlashda xatolik yuz berdi. Konsolni tekshiring.");
                 }
             })
             .catch(err => console.error(err));
@@ -179,7 +212,7 @@
             document.getElementById("news-text").value = item.text;
             document.getElementById("news-img").value = item.image;
             document.getElementById("edit-id").value = index;
-
+            
             document.getElementById("form-title").innerText = "Yangilikni tahrirlash";
             document.getElementById("save-btn").innerText = "O'zgarishlarni saqlash";
             document.getElementById("cancel-btn").style.display = "inline-block";
